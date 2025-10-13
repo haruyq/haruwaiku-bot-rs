@@ -23,6 +23,7 @@ async fn main() -> Result<()> {
     let commands = {
         let mut v = Vec::new();
         v.extend(commands::ping::setup());
+        v.extend(commands::translate::setup());
         v
     };
 
