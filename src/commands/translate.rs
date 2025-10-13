@@ -1,4 +1,5 @@
 use crate::{Context, Error};
+use serenity::all::{Colour, CreateEmbedFooter};
 use reqwest::{self};
 
 const API_BASE: &str = "https://generativelanguage.googleapis.com/v1beta/models";
@@ -77,16 +78,26 @@ pub async fn translate(
     #[description = "翻訳するメッセージ"]
     message: poise::serenity_prelude::Message,
 ) -> Result<(), Error> {
+    ctx.defer().await?;
+
     let original = message.content.clone();
     let translated = translate_text(original.clone()).await;
 
-    let response = format!(
-        "**翻訳前**: {}\n**翻訳後**: {}",
-        original,
-        translated
-    );
+    let embed = poise::serenity_prelude::CreateEmbed::new()
+        .author(poise::serenity_prelude::CreateEmbedAuthor::new(
+            message.author.display_name(),
+        ).icon_url(
+            message.author.avatar_url().unwrap_or_else(|| message.author.default_avatar_url()),
+        ).url(
+            message.link()
+        ))
+        .description(translated)
+        .footer(CreateEmbedFooter::new("Gemini")
+        .icon_url("https://storage.googleapis.com/gweb-uniblog-publish-prod/original_images/logo_hires_EsXLFa1.gif"))
+        .color(Colour::from_rgb(55, 255, 119))
+        .to_owned();
 
-    ctx.say(response).await?;
+    ctx.send(poise::CreateReply::default().embed(embed)).await?;
     Ok(())
 }
 
