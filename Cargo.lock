@@ -365,6 +365,7 @@ name = "discord-bot-rs"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "base64 0.22.1",
  "log",
  "poise",
  "reqwest 0.12.23",

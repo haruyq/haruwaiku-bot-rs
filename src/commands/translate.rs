@@ -1,5 +1,6 @@
 use crate::{Context, Error};
-use serenity::all::{Colour, CreateEmbedFooter};
+use base64::{engine::general_purpose, Engine};
+use serenity::all::{Attachment, Colour, CreateEmbedFooter};
 use reqwest::{self};
 
 const API_BASE: &str = "https://generativelanguage.googleapis.com/v1beta/models";
@@ -19,9 +20,29 @@ const SYSTEM_PROMPT: &str = "
 ・日本語の翻訳のみを出力すること。ただし、局所的に英単語を使うことは許される
 ";
 
-async fn generate_content(model: String, prompt: String, api_key: String) -> Result<String, Error> {
+async fn generate_content(model: String, prompt: String, api_key: String, attachment: Option<Attachment>) -> Result<String, Error> {
     let client = reqwest::Client::new();
     let url = format!("{}/{}:generateContent", API_BASE, model);
+
+    let mut parts = vec![serde_json::json!({ "text": prompt })];
+    if let Some(attachment) = attachment {
+        if let Some(content_type) = &attachment.content_type {
+            if content_type.starts_with("image/") {
+                let image_bytes = attachment.download().await?;
+
+                let encoded_image = general_purpose::STANDARD.encode(&image_bytes);
+
+                let image_part = serde_json::json!({
+                    "inlineData": {
+                        "mimeType": content_type,
+                        "data": encoded_image
+                    }
+                });
+                
+                parts.push(image_part);
+            }
+        }
+    }
 
     let mut headers = reqwest::header::HeaderMap::new();
     headers.insert("x-goog-api-key", api_key.parse().unwrap());
@@ -30,11 +51,7 @@ async fn generate_content(model: String, prompt: String, api_key: String) -> Res
     let request_body = serde_json::json!({
         "contents": [
             {
-                "parts": [
-                    {
-                        "text": prompt
-                    }
-                ]
+                "parts": parts
             }
         ],
         "systemInstruction": {
@@ -64,10 +81,10 @@ async fn generate_content(model: String, prompt: String, api_key: String) -> Res
     }
 }
 
-async fn translate_text(text: String) -> String {
+async fn translate_text(text: String, attachment: Option<Attachment>) -> String {
     let api_key = std::env::var("GEMINI_API_KEY").unwrap_or_default();
     let model = std::env::var("GEMINI_MODEL").unwrap_or_else(|_| "gemini-2.0-flash".to_string());
-    match generate_content(model, text, api_key).await {
+    match generate_content(model, text, api_key, attachment).await {
         Ok(translated) => translated,
         Err(e) => {
             eprintln!("Error during translation: {}", e);
@@ -79,13 +96,12 @@ async fn translate_text(text: String) -> String {
 #[poise::command(context_menu_command = "日本語翻訳")]
 pub async fn translate(
     ctx: Context<'_>,
-    #[description = "翻訳するメッセージ"]
     message: poise::serenity_prelude::Message,
 ) -> Result<(), Error> {
     ctx.defer().await?;
 
     let original = message.content.clone();
-    let translated = translate_text(original.clone()).await;
+    let translated = translate_text(original.clone(), message.attachments.first().cloned()).await;
 
     let embed = poise::serenity_prelude::CreateEmbed::new()
         .author(poise::serenity_prelude::CreateEmbedAuthor::new(
