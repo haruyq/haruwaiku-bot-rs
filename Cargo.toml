@@ -1,0 +1,12 @@
+[package]
+name = "discord-bot-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serenity = { version = "0.12", features = ["client", "gateway", "rustls_backend", "framework"] }
+log = "0.4.28"
+poise = "0.6.1"
+thiserror = "2.0.17"
+tokio = { version = "1.47.1", features = ["rt-multi-thread"] }
+anyhow = "1.0"

@@ -1,0 +1,6 @@
+services:
+  discord-bot-rs:
+    build: .
+    container_name: discord-bot-rs
+    env_file:
+      - .env
