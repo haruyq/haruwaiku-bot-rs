@@ -20,7 +20,7 @@ const SYSTEM_PROMPT: &str = "
 ・日本語の翻訳のみを出力すること。ただし、局所的に英単語を使うことは許される
 ";
 
-async fn generate_content(model: String, prompt: String, api_key: String, attachment: Option<Attachment>) -> Result<String, Error> {
+async fn generate_content(model: &str, prompt: &str, api_key: &str, attachment: Option<&Attachment>) -> Result<String, Error> {
     let client = reqwest::Client::new();
     let url = format!("{}/{}:generateContent", API_BASE, model);
 
@@ -46,7 +46,6 @@ async fn generate_content(model: String, prompt: String, api_key: String, attach
 
     let mut headers = reqwest::header::HeaderMap::new();
     headers.insert("x-goog-api-key", api_key.parse().unwrap());
-    headers.insert("Content-Type", "application/json".parse().unwrap());
 
     let request_body = serde_json::json!({
         "contents": [
@@ -65,7 +64,7 @@ async fn generate_content(model: String, prompt: String, api_key: String, attach
     let response = client
         .post(&url)
         .headers(headers)
-        .body(request_body.to_string())
+        .json(&request_body)
         .send()
         .await?;
 
@@ -81,10 +80,10 @@ async fn generate_content(model: String, prompt: String, api_key: String, attach
     }
 }
 
-async fn translate_text(text: String, attachment: Option<Attachment>) -> String {
+async fn translate_text(text: &str, attachment: Option<&Attachment>) -> String {
     let api_key = std::env::var("GEMINI_API_KEY").unwrap_or_default();
     let model = std::env::var("GEMINI_MODEL").unwrap_or_else(|_| "gemini-2.0-flash".to_string());
-    match generate_content(model, text, api_key, attachment).await {
+    match generate_content(&model, &text, &api_key, attachment).await {
         Ok(translated) => translated,
         Err(e) => {
             eprintln!("Error during translation: {}", e);
@@ -101,7 +100,7 @@ pub async fn translate(
     ctx.defer().await?;
 
     let original = message.content.clone();
-    let translated = translate_text(original.clone(), message.attachments.first().cloned()).await;
+    let translated = translate_text(&original, message.attachments.first()).await;
 
     let embed = poise::serenity_prelude::CreateEmbed::new()
         .author(poise::serenity_prelude::CreateEmbedAuthor::new(
