@@ -6,6 +6,7 @@ pub async fn xlinkconvert(
     #[description = "変換するURL"]
     url: String,
 ) -> Result<(), Error> {
+    
     let converted_url = url.replace("https://x.com/", "https://fxtwitter.com/");
     ctx.say(converted_url).await?;
     Ok(())
