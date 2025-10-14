@@ -1,0 +1,65 @@
+name: Auto Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy source via SSH
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no \
+            ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+          set -e
+          if [ ! -d "~/haruwaiku-bot-rs" ]; then
+            git clone https://github.com/haruyq/haruwaiku-bot-rs.git ~/haruwaiku-bot-rs
+          fi
+          cd ~/haruwaiku-bot-rs
+          git fetch --all
+          git reset --hard origin/master
+          EOF
+
+      - name: Setup Environment (.env)
+        run: |
+          echo "${{ secrets.DEPLOY }}" | ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no \
+            ${{ secrets.USERNAME }}@${{ secrets.HOST }} 'cat > ~/haruwaiku-bot-rs/.env'
+
+      - name: Run Docker Compose
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no \
+            ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+          set -e
+          cd ~/haruwaiku-bot-rs
+          docker compose pull
+          docker compose up -d --remove-orphans
+          EOF
+
+      - name: Send success message to Discord
+        if: success()
+        run: |
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d '{"content":"✅ `[200 | OK]` **haruwaiku-bot-rs** has been Auto Deployed successfully!"}' \
+            "${{ secrets.DISCORD_WEBHOOK }}"
+
+      - name: Send failure message to Discord
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d '{"content":"❌ `[500 | ERROR]` Auto Deploy failed for **haruwaiku-bot-rs**. Please check GitHub Actions logs."}' \
+            "${{ secrets.DISCORD_WEBHOOK }}"
