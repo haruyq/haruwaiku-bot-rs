@@ -12,10 +12,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Remote Deploy via HTTPS (no SSH)
+      
+      - name: Remote Deploy via HTTPS
         run: |
-          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p 2222 -o StrictHostKeyChecking=no \
+            ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
           set -e
           cd ~/haruwaiku-bot-rs
           git pull https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/haruyq/haruwaiku-bot-rs.git master
