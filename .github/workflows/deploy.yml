@@ -29,7 +29,8 @@ jobs:
           git pull https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/haruyq/haruwaiku-bot-rs.git master
           echo "${{ secrets.DEPLOY }}" > .env
           docker compose pull
-          docker compose up -d --remove-orphans
+          docker compose build
+          docker compose up -d--remove-orphans
           EOF
 
       - name: Last Notify Discord
