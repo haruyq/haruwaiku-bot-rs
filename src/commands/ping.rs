@@ -8,7 +8,5 @@ pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
 }
 
 pub fn setup() -> Vec<poise::Command<crate::Data, Error>> {
-    vec![
-        ping(),
-    ]
+    vec![ping()]
 }

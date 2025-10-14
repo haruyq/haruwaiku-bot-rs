@@ -27,9 +27,7 @@ async fn main() -> Result<()> {
         v
     };
 
-    let events = {
-        events::on_ready::Handler
-    };
+    let events = { events::on_ready::Handler };
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {

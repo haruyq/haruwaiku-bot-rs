@@ -1,7 +1,6 @@
 use crate::{Context, Error};
 use base64::{engine::general_purpose, Engine};
 use serenity::all::{Attachment, Colour, CreateEmbedFooter};
-use reqwest::{self};
 
 const API_BASE: &str = "https://generativelanguage.googleapis.com/v1beta/models";
 const SYSTEM_PROMPT: &str = "
@@ -25,9 +24,9 @@ async fn generate_content(model: &str, prompt: &str, api_key: &str, attachment: 
     let url = format!("{}/{}:generateContent", API_BASE, model);
 
     let mut parts = vec![serde_json::json!({ "text": prompt })];
-    if let Some(attachment) = attachment {
-        if let Some(content_type) = &attachment.content_type {
-            if content_type.starts_with("image/") {
+    if let Some(attachment) = attachment 
+        && let Some(content_type) = &attachment.content_type
+            && content_type.starts_with("image/") {
                 let image_bytes = attachment.download().await?;
 
                 let encoded_image = general_purpose::STANDARD.encode(&image_bytes);
@@ -41,8 +40,6 @@ async fn generate_content(model: &str, prompt: &str, api_key: &str, attachment: 
                 
                 parts.push(image_part);
             }
-        }
-    }
 
     let mut headers = reqwest::header::HeaderMap::new();
     headers.insert("x-goog-api-key", api_key.parse().unwrap());
@@ -68,22 +65,19 @@ async fn generate_content(model: &str, prompt: &str, api_key: &str, attachment: 
         .send()
         .await?;
 
-    let status = response.status();
-    let body = response.text().await?;
-    let parsed: serde_json::Value = serde_json::from_str(&body)
-        .map_err(|e| format!("Failed to parse response (status {}): {} | body: {}", status, e, body))?;
+    let body: serde_json::Value = response.json().await?;
 
-    if let Some(content) = parsed["candidates"][0]["content"]["parts"][0]["text"].as_str() {
+    if let Some(content) = body["candidates"][0]["content"]["parts"][0]["text"].as_str() {
         Ok(content.to_string())
     } else {
-        Err(format!("Failed to get content from response: {}", parsed).into())
+        Err(format!("Failed to get content from response: {}", body).into())
     }
 }
 
 async fn translate_text(text: &str, attachment: Option<&Attachment>) -> String {
     let api_key = std::env::var("GEMINI_API_KEY").unwrap_or_default();
     let model = std::env::var("GEMINI_MODEL").unwrap_or_else(|_| "gemini-2.0-flash".to_string());
-    match generate_content(&model, &text, &api_key, attachment).await {
+    match generate_content(&model, text, &api_key, attachment).await {
         Ok(translated) => translated,
         Err(e) => {
             eprintln!("Error during translation: {}", e);
