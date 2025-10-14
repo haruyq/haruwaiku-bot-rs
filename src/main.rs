@@ -24,6 +24,7 @@ async fn main() -> Result<()> {
         let mut v = Vec::new();
         v.extend(commands::ping::setup());
         v.extend(commands::translate::setup());
+        v.extend(commands::xlinkconvert::setup());
         v
     };
 
