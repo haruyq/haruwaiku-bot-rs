@@ -12,8 +12,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Remote Deploy via HTTPS
+        
+      - name: First Notify Discord
+        run: |
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d '{"content":"📐 `[DEPLOY]` haruwaiku-bot-rs New commit Detected. Service will be reload."}' \
+            "${{ secrets.DISCORD_WEBHOOK }}"
+            
+      - name: Remote Deploy
         run: |
           sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p 2222 -o StrictHostKeyChecking=no \
             ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
@@ -25,10 +32,10 @@ jobs:
           docker compose up -d --remove-orphans
           EOF
 
-      - name: Notify Discord
+      - name: Last Notify Discord
         if: success()
         run: |
           curl -H "Content-Type: application/json" \
             -X POST \
-            -d '{"content":"✅ `[200 | OK]` haruwaiku-bot-rs has been deployed (no SSH)."}' \
+            -d '{"content":"✅ `[OK]` haruwaiku-bot-rs Service is up!"}' \
             "${{ secrets.DISCORD_WEBHOOK }}"
