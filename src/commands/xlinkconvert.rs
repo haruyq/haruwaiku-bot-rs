@@ -1,7 +1,7 @@
 use crate::{Context, Error};
 use url::Url;
 
-///
+/// Convert x.com URLs to fxtwitter.com URLs.
 #[poise::command(slash_command, guild_only)]
 pub async fn xlinkconvert(
     ctx: Context<'_>,
