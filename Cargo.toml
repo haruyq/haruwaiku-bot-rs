@@ -14,3 +14,4 @@ reqwest = { version = "0.12.24", features = ["json"] }
 serde_json = "1.0.145"
 base64 = "0.22.1"
 url = "2.5.7"
+dotenvy = "0.15.7"

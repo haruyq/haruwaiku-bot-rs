@@ -1,5 +1,7 @@
 use anyhow::Result;
+use dotenvy::dotenv;
 use poise::serenity_prelude as serenity;
+use std::env;
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 struct Data {}
@@ -10,14 +12,9 @@ mod events;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut token = std::env::var("TOKEN").unwrap_or_default();
-    if token.is_empty() {
-        let mut input = String::new();
-        println!("Please enter your bot token:");
-        std::io::stdin().read_line(&mut input)?;
-        token = input.trim().to_string();
-    }
+    dotenv().expect("Failed to load configuration.");
 
+    let token = env::var("TOKEN").unwrap_or_default();
     let intents = serenity::GatewayIntents::default();
 
     let commands = {
@@ -25,6 +22,7 @@ async fn main() -> Result<()> {
         v.extend(commands::ping::setup());
         v.extend(commands::translate::setup());
         v.extend(commands::xlinkconvert::setup());
+        v.extend(commands::nuke::setup());
         v
     };
 
