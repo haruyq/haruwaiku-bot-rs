@@ -12,7 +12,12 @@ mod events;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    dotenv().expect("Failed to load configuration.");
+    if cfg!(target_os = "windows") {
+        println!("Working on Windows");
+        dotenv().expect("Failed to load configuration.");
+    } else {
+        println!("Working on Linux");
+    }
 
     let token = env::var("TOKEN").unwrap_or_default();
     let intents = serenity::GatewayIntents::default();
