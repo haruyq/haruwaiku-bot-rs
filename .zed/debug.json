@@ -1,0 +1,17 @@
+[
+  {
+    "label": "Build & Debug",
+
+    "build": {
+      "command": "C:\\Users\\harup\\.cargo\\bin\\cargo.exe",
+
+      "args": ["build", "--package", "discord-bot-rs"]
+    },
+
+    "program": "$ZED_WORKTREE_ROOT/target/debug/discord-bot-rs",
+
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB"
+  }
+]
