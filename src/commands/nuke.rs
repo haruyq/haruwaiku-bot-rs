@@ -34,7 +34,7 @@ pub async fn duplicate_channel(
     Ok(new_channel)
 }
 
-/// Resets all logs for the specified channel
+/// Resets all logs for the specified channel.
 #[poise::command(slash_command, required_permissions = "MANAGE_CHANNELS")]
 pub async fn nuke(ctx: Context<'_>) -> Result<(), Error> {
     let http = ctx.http();
