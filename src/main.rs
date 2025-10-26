@@ -28,6 +28,7 @@ async fn main() -> Result<()> {
         v.extend(commands::translate::setup());
         v.extend(commands::xlinkconvert::setup());
         v.extend(commands::nuke::setup());
+        v.extend(commands::slowmode::setup());
         v
     };
 

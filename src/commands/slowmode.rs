@@ -1,6 +1,5 @@
-use serenity::all::EditChannel;
-
 use crate::{Context, Error};
+use serenity::all::EditChannel;
 
 /// Set the slowmode for a channel.
 #[poise::command(slash_command, required_permissions = "ADMINISTRATOR")]
