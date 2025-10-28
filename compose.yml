@@ -4,3 +4,8 @@ services:
     container_name: discord-bot-rs
     env_file:
       - .env
+    volumes:
+      - data-volume:/Common/Data
+
+volumes:
+  data-volume:
