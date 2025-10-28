@@ -1,6 +1,8 @@
 use crate::Error;
 use ::serenity::async_trait;
+use discord_bot_rs::reminder::task::Task;
 use poise::serenity_prelude as serenity;
+use tokio::time::interval;
 
 pub struct Handler;
 
@@ -14,6 +16,15 @@ impl serenity::EventHandler for Handler {
 }
 
 pub async fn on_ready(_ctx: &serenity::Context, ready: &serenity::Ready) -> Result<(), Error> {
+    let http = _ctx.http.clone();
+    tokio::spawn(async move {
+        let mut interval = interval(std::time::Duration::from_secs(10));
+        loop {
+            interval.tick().await;
+            Task::run(&http).await;
+        }
+    });
+
     let discriminator = ready
         .user
         .discriminator
