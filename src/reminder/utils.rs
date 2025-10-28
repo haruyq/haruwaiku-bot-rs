@@ -133,7 +133,6 @@ impl ReminderUtil {
         time: &str,
         week: Option<&Weekday>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        // 既存のリマインダーを読み込む（なければ空のHashMap）
         let mut reminders = Self::read_user_reminders(&user_id)
             .await
             .unwrap_or_else(|_| HashMap::new());

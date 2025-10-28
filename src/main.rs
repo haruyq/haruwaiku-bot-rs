@@ -1,7 +1,7 @@
 use anyhow::Result;
 use dotenvy::dotenv;
 use poise::serenity_prelude as serenity;
-use std::env;
+use std::{env, path::Path};
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 struct Data {}
@@ -17,6 +17,14 @@ async fn main() -> Result<()> {
         dotenv().expect("Failed to load configuration.");
     } else {
         println!("Working on Linux");
+    }
+    let reminder_dir =
+        env::var("DATA_DIR").unwrap_or_else(|_| "/Common/Data".to_string()) + "/Reminders";
+    if !Path::new(&reminder_dir).exists() {
+        tokio::fs::DirBuilder::new()
+            .recursive(true)
+            .create(reminder_dir)
+            .await?;
     }
 
     let token = env::var("TOKEN").unwrap_or_default();
