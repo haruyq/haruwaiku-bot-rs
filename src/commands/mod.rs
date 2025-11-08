@@ -3,4 +3,3 @@ pub mod ping;
 pub mod slowmode;
 pub mod translate;
 pub mod xlinkconvert;
-pub mod reminder;
