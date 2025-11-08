@@ -7,14 +7,15 @@ on:
       - completed
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
 
     steps:
-      - name: First Notify Discord
+      - name: Notify Discord
         run: |
           curl -H "Content-Type: application/json" \
             -X POST \
@@ -44,18 +45,18 @@ jobs:
             # Cleanup
             docker image prune -f
 
-      - name: Last Notify Discord
+      - name: Notify Discord
         if: success()
         run: |
           curl -H "Content-Type: application/json" \
             -X POST \
-            -d '{"content":"✅ `[OK]` haruwaiku-bot-rs Service is up and running!"}' \
+            -d '{"content":"✅ `[OK]` haruwaiku-bot-rs Service is up and running."}' \
             "${{ secrets.DISCORD_WEBHOOK }}"
 
-      - name: Notify Discord - Deploy Failed
+      - name: Notify Discord if failed
         if: failure()
         run: |
           curl -H "Content-Type: application/json" \
             -X POST \
-            -d '{"content":"❌ `[DEPLOY]` haruwaiku-bot-rs Deployment failed!"}' \
+            -d '{"content":"❌ `[DEPLOY]` haruwaiku-bot-rs Deployment failed."}' \
             "${{ secrets.DISCORD_WEBHOOK }}"

@@ -9,6 +9,7 @@ on:
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'Dockerfile'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -52,18 +53,18 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Notify Discord - Build Success
+      - name: Notify Discord if success
         if: success()
         run: |
           curl -H "Content-Type: application/json" \
             -X POST \
-            -d '{"content":"✅ `[BUILD]` haruwaiku-bot-rs Docker image built successfully!"}' \
+            -d '{"content":"✅ `[BUILD]` haruwaiku-bot-rs image built successfully."}' \
             "${{ secrets.DISCORD_WEBHOOK }}"
 
-      - name: Notify Discord - Build Failed
+      - name: Notify Discord if failed
         if: failure()
         run: |
           curl -H "Content-Type: application/json" \
             -X POST \
-            -d '{"content":"❌ `[BUILD]` haruwaiku-bot-rs Docker image build failed!"}' \
+            -d '{"content":"❌ `[BUILD]` haruwaiku-bot-rs image build failed."}' \
             "${{ secrets.DISCORD_WEBHOOK }}"
