@@ -1,41 +1,61 @@
-name: Auto Deploy
+name: Deploy to Server
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Build Docker Image"]
+    types:
+      - completed
     branches:
       - master
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
       - name: First Notify Discord
         run: |
           curl -H "Content-Type: application/json" \
             -X POST \
-            -d '{"content":"📐 `[DEPLOY]` haruwaiku-bot-rs New commit Detected. Service will be reload."}' \
+            -d '{"content":"📐 `[DEPLOY]` haruwaiku-bot-rs Deploying new version to server..."}' \
             "${{ secrets.DISCORD_WEBHOOK }}"
+
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.SERVER_PASS }}
+          port: 2222
+          script: |
+            cd ~/haruwaiku-bot-rs
+            echo "${{ secrets.DEPLOY }}" > .env
             
-      - name: Remote Deploy
-        run: |
-          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p 2222 -o StrictHostKeyChecking=no \
-            ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
-          set -e
-          cd ~/haruwaiku-bot-rs
-          git pull https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/haruyq/haruwaiku-bot-rs.git master
-          echo "${{ secrets.DEPLOY }}" > .env
-          docker compose pull
-          docker compose up -d --build --remove-orphans
-          EOF
+            # Login to GitHub Container Registry
+            echo "${{ secrets.GH_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # Pull the latest image
+            docker pull ghcr.io/${{ github.repository }}:latest
+            
+            # Update docker-compose to use the pre-built image
+            docker compose up -d --remove-orphans
+            
+            # Cleanup
+            docker image prune -f
 
       - name: Last Notify Discord
         if: success()
         run: |
           curl -H "Content-Type: application/json" \
             -X POST \
-            -d '{"content":"✅ `[OK]` haruwaiku-bot-rs Service is up!"}' \
+            -d '{"content":"✅ `[OK]` haruwaiku-bot-rs Service is up and running!"}' \
+            "${{ secrets.DISCORD_WEBHOOK }}"
+
+      - name: Notify Discord - Deploy Failed
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d '{"content":"❌ `[DEPLOY]` haruwaiku-bot-rs Deployment failed!"}' \
             "${{ secrets.DISCORD_WEBHOOK }}"

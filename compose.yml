@@ -1,11 +1,12 @@
 services:
   discord-bot-rs:
-    build: .
+    image: ghcr.io/haruyq/haruwaiku-bot-rs:latest
     container_name: discord-bot-rs
     env_file:
       - .env
     volumes:
       - data-volume:/Common/Data
+    restart: unless-stopped
 
 volumes:
   data-volume:
