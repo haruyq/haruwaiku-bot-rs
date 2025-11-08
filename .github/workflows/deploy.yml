@@ -36,7 +36,7 @@ jobs:
             echo "${{ secrets.GH_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
             # Pull the latest image
-            docker pull ghcr.io/${{ github.repository }}:latest
+            docker pull ghcr.io/${{ github.repository_owner }}/haruwaiku-bot-rs:latest
             
             # Update docker-compose to use the pre-built image
             docker compose up -d --remove-orphans

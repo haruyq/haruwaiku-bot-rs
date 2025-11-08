@@ -10,6 +10,10 @@ on:
       - 'Cargo.lock'
       - 'Dockerfile'
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -32,7 +36,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ghcr.io/${{ github.repository_owner }}/haruwaiku-bot-rs
           tags: |
             type=raw,value=latest
             type=sha,prefix=
