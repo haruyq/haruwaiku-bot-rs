@@ -17,15 +17,6 @@ async fn main() -> Result<()> {
         dotenv().expect("Failed to load configuration.");
     } else {
         println!("Working on Linux");
-
-        let reminder_dir =
-            env::var("DATA_DIR").unwrap_or_else(|_| "/Common/Data".to_string()) + "/Reminders";
-        if !Path::new(&reminder_dir).exists() {
-            tokio::fs::DirBuilder::new()
-                .recursive(true)
-                .create(reminder_dir)
-                .await?;
-        }
     }
 
     let token = env::var("TOKEN").unwrap_or_default();
@@ -64,3 +55,4 @@ async fn main() -> Result<()> {
     client.start().await?;
     Ok(())
 }
+
