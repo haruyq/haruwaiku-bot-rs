@@ -1,7 +1,7 @@
 use anyhow::Result;
 use dotenvy::dotenv;
 use poise::serenity_prelude as serenity;
-use std::{env, path::Path};
+use std::env;
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 struct Data {}
